@@ -1,0 +1,7 @@
+.idea/
+*.class
+*.log
+*.jfr
+target/
+out/
+.DS_Store
