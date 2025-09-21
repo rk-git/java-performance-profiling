@@ -1,14 +1,25 @@
 # Java Performance Profiling
 
-A collection of Java code examples to experiment with JFR (Java Flight Recorder), JMC (Java Mission Control), and concurrency profiling.
+This project is a collection of small, focused Java programs to explore and demonstrate performance characteristics of concurrent systems using:
 
-## Experiments
+- Java Flight Recorder (JFR)
+- Java Mission Control (JMC)
+- Thread pools, blocking, starvation, deadlocks, GC pressure, and more
 
-- Thread starvation demo
-- Memory allocation analysis
-- CPU-bound vs IO-bound tasks
-- Executor behavior exploration
+## 🔬 Demos
 
-## How to Run
+### 1. Thread Pool Starvation
 
-Each demo is a standalone Java program. Compile and run with JDK 21+.
+File: `StarvationDemo.java`  
+Description: Demonstrates a simple thread pool starvation scenario using nested `Future.get()` calls.
+
+To run with JFR enabled:
+```bash
+java -XX:StartFlightRecording=duration=60s,filename=starvation.jfr,settings=profile \
+     -cp target/java-performance-profiling-*.jar \
+     org.rks.java.performance.StarvationDemo
+
+📊 Tools Used
+	•	Java 21
+	•	JFR + JMC
+	•	Maven
