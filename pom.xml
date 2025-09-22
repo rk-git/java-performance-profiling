@@ -19,16 +19,28 @@
     <build>
         <plugins>
             <plugin>
-  <groupId>org.codehaus.mojo</groupId>
-  <artifactId>exec-maven-plugin</artifactId>
-  <version>3.1.0</version>
-  <configuration>
-    <mainClass>org.rks.java.performance.StarvationDemo</mainClass>
-    <jvmArgs>
-      <jvmArg>-XX:StartFlightRecording=duration=60s,filename=starvation.jfr,settings=profile</jvmArg>
-    </jvmArgs>
-  </configuration>
-</plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>exec-maven-plugin</artifactId>
+              <version>3.1.0</version>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>java</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <mainClass>org.rks.java.performance.StarvationDemo</mainClass>
+                <arguments></arguments>
+                <includePluginDependencies>true</includePluginDependencies>
+                <includeProjectDependencies>true</includeProjectDependencies>
+                <fork>true</fork>
+                <executable>java</executable>
+                <commandlineArgs>
+                  -XX:StartFlightRecording=filename=starvation.jfr,duration=30s,settings=profile
+                </commandlineArgs>
+              </configuration>
+            </plugin>
          
             <!-- Javac plugin for Java 21 -->
             <plugin>
@@ -38,7 +50,12 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                     <release>21</release>
-                </configuration>
+                    <release>21</release>
+                    <compilerArgs>
+                      <arg>--add-modules</arg>
+                      <arg>jdk.jfr</arg>
+                    </compilerArgs>
+                  </configuration>
             </plugin>
 
             <!-- Optional: Shade plugin in case I choose to bundle experiments -->
