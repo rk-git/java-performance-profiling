@@ -1,25 +1,96 @@
-# Java Performance Profiling
+# Java Performance Profiling Demos
 
-This project is a collection of small, focused Java programs to explore and demonstrate performance characteristics of concurrent systems using:
+This project demonstrates common Java performance issues, visualized using [Java Flight Recorder (JFR)](https://docs.oracle.com/en/java/javase/17/jfapi/java-flight-recorder-api.html) and [Java Mission Control (JMC)](https://www.oracle.com/java/technologies/javacommunity/javamicont.html).
 
-- Java Flight Recorder (JFR)
-- Java Mission Control (JMC)
-- Thread pools, blocking, starvation, deadlocks, GC pressure, and more
+Each demo is a standalone Java class with a `main()` method, launched using Maven profiles and instrumented with JFR.
 
-## 🔬 Demos
+---
 
-### 1. Thread Pool Starvation
+## 🏗️ Build
 
-File: `StarvationDemo.java`  
-Description: Demonstrates a simple thread pool starvation scenario using nested `Future.get()` calls.
-
-To run with JFR enabled:
 ```bash
-java -XX:StartFlightRecording=duration=60s,filename=starvation.jfr,settings=profile \
-     -cp target/java-performance-profiling-*.jar \
-     org.rks.java.performance.StarvationDemo
+mvn compile
+```
 
-📊 Tools Used
-	•	Java 21
-	•	JFR + JMC
-	•	Maven
+---
+
+## 🚀 Run Demos with JFR Enabled
+
+### 🔁 Lock Contention Demo
+
+Simulates multiple threads contending for a shared monitor lock.
+
+```bash
+mvn compile exec:exec -Plockcontention
+```
+
+This will:
+- Start 5 threads trying to acquire the same lock
+- Record thread contention using JFR
+- Write the output to `lockcontention.jfr`
+
+### 🌟 Starvation Demo
+
+Demonstrates thread starvation due to nested task submission in a fixed thread pool.
+
+```bash
+mvn compile exec:exec -Pstarvation
+```
+
+---
+
+## 📂 Profiles
+
+Defined in `pom.xml`:
+
+| Profile ID       | Description                      | Main Class                                                   | Output                |
+|------------------|----------------------------------|---------------------------------------------------------------|------------------------|
+| `lockcontention` | Lock contention simulation       | `org.rks.java.performance.LockContentionDemo`                | `lockcontention.jfr`   |
+| `starvation`     | Thread starvation via deadlock   | `org.rks.java.performance.StarvationDemo`                    | `starvation.jfr`       |
+
+---
+
+## 📊 Analyze `.jfr` Files with JMC
+
+### 1. Launch JMC
+
+```bash
+jmc
+```
+
+Or install via Homebrew (macOS):
+
+```bash
+brew install --cask jmc
+```
+
+### 2. Open `.jfr` File
+
+Choose either `lockcontention.jfr` or `starvation.jfr`.
+
+### 3. Explore in JMC
+
+#### 🔒 Lock Contention
+
+- Go to: `Java Application → Lock Instances`
+- Also see: `Event Browser → Java Monitor Blocked`
+- Shows which threads were blocked and for how long
+
+#### ⚙️ Thread Behavior
+
+- `Java Application → Threads`: view thread states over time
+- `Method Profiling`: identify hot methods related to contention
+
+---
+
+## 🧪 TODOs & Ideas
+
+- Add more demos (false sharing, ReentrantLock contention, GC pressure)
+- Automate JFR reporting or convert to CSV
+- GitHub Actions to capture `.jfr` as artifacts
+
+---
+
+## 🧠 Author
+
+**Rk** – Built for JVM performance introspection and demoing real-world concurrency bottlenecks.
