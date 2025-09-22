@@ -15,33 +15,48 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    
+<profiles>
+  <profile>
+    <id>starvation</id>
+    <properties>
+      <mainClass>org.rks.java.performance.StarvationDemo</mainClass>
+      <jvmArgs>-XX:StartFlightRecording=filename=starvation.jfr,duration=30s,settings=profile</jvmArgs>
+    </properties>
+  </profile>
+  <profile>
+    <id>lockcontention</id>
+    <properties>
+      <mainClass>org.rks.java.performance.LockContentionDemo</mainClass>
+      <jvmArgs>-XX:StartFlightRecording=filename=lockcontention.jfr,duration=30s,settings=profile</jvmArgs>
+    </properties>
+  </profile>
+</profiles>
 
-    <build>
-        <plugins>
-            <plugin>
-              <groupId>org.codehaus.mojo</groupId>
-              <artifactId>exec-maven-plugin</artifactId>
-              <version>3.1.0</version>
-              <executions>
-                <execution>
-                  <goals>
-                    <goal>java</goal>
-                  </goals>
-                </execution>
-              </executions>
-              <configuration>
-                <mainClass>org.rks.java.performance.StarvationDemo</mainClass>
-                <arguments></arguments>
-                <includePluginDependencies>true</includePluginDependencies>
-                <includeProjectDependencies>true</includeProjectDependencies>
-                <fork>true</fork>
-                <executable>java</executable>
-                <commandlineArgs>
-                  -XX:StartFlightRecording=filename=starvation.jfr,duration=30s,settings=profile
-                </commandlineArgs>
-              </configuration>
-            </plugin>
-         
+<build>
+  <plugins>
+          <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>exec-maven-plugin</artifactId>
+      <version>3.1.0</version>
+      <executions>
+        <execution>
+          <goals>
+            <goal>exec</goal> <!-- NOTE: changed from java -->
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <executable>java</executable>
+        <arguments>
+          <argument>${jvmArgs}</argument>
+          <argument>-cp</argument>
+          <argument>${project.build.outputDirectory}</argument>
+          <argument>${mainClass}</argument>
+        </arguments>
+      </configuration>
+    </plugin>
+
             <!-- Javac plugin for Java 21 -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
