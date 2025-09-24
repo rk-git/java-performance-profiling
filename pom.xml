@@ -14,23 +14,35 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <flight.jfr.flags>-XX:StartFlightRecording=duration=30s,settings=profile</flight.jfr.flags>
     </properties>
     
 <profiles>
   <profile>
-    <id>starvation</id>
+    <id>lockcontention</id>
+    <!-- Simulates lock contention using oversubscription of a lock via task submission -->
     <properties>
-      <mainClass>org.rks.java.performance.StarvationDemo</mainClass>
-      <jvmArgs>-XX:StartFlightRecording=filename=starvation.jfr,duration=30s,settings=profile</jvmArgs>
+      <mainClass>org.rks.java.performance.LockContentionDemo</mainClass>
+      <jvmArgs>${flight.jfr.flags},filename=lockcontention.jfr</jvmArgs>
     </properties>
   </profile>
   <profile>
-    <id>lockcontention</id>
+    <!-- Simulates thread starvation via nested task submission -->
+    <id>starvation</id>
     <properties>
-      <mainClass>org.rks.java.performance.LockContentionDemo</mainClass>
-      <jvmArgs>-XX:StartFlightRecording=filename=lockcontention.jfr,duration=30s,settings=profile</jvmArgs>
+      <mainClass>org.rks.java.performance.StarvationDemo</mainClass>
+      <jvmArgs>${flight.jfr.flags},filename=starvation.jfr</jvmArgs>
     </properties>
   </profile>
+  <profile>
+    <id>systemoutcontention</id>
+    <!-- Creates system lock contention that occurs commonly even in production code -->
+    <properties>
+      <mainClass>org.rks.java.performance.SystemOutContention</mainClass>
+      <jvmArgs>${flight.jfr.flags},filename=systemoutcontention.jfr</jvmArgs>
+    </properties>
+  </profile>
+
 </profiles>
 
 <build>
@@ -64,7 +76,6 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
-                    <release>21</release>
                     <release>21</release>
                     <compilerArgs>
                       <arg>--add-modules</arg>
