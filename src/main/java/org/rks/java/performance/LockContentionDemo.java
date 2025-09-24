@@ -1,15 +1,27 @@
 /*
  * File: LockContentionDemo.java
- * Description: Demonstration of lock contention among many threads.
- *              A bunch of workers (threads ) are spawned by an Executor
- *              and seek a lock. Once the lock is obtianed, the worker
- *              performs "work" (sleep) and releases the lock after
- *              which the next contender workder grabs the lock.
- *              This cycle repeatedly indefinitely.
- *  
- * Author: Rk <rk@alwaysup.dev>
+ * Demonstrates lock contention under various thread loads.
+ *
+ * This class runs N threads that continuously contend for a shared lock
+ * (e.g., synchronized block). It highlights how lock contention increases
+ * latency and reduces throughput as more threads compete for the same resource.
+ *
+ * Use this demo to generate JFR recordings and analyze:
+ * - Thread blocking times
+ * - Monitor contention
+ * - Lock acquisition latencies
+ *
+ * Expected output:
+ * - Ops/sec (throughput)
+ * - Avg latency per operation
+ *
+ * Run with: mvn compile exec:exec -Plockcontention
+ * Tested on: OpenJDK 17, with -XX:+FlightRecorder enabled
+ * Author: Rk <rks.0728@gmail.com>
  * Created: 2025-09-21
  *
+ * @author rks.0728@gmail.com
+ * @since 2025-09-21
  * Copyright 2025 Rk
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,35 +38,41 @@
  */
 package org.rks.java.performance;
 
-import jdk.jfr.Category;
-import jdk.jfr.Event;
-import jdk.jfr.Label;
-import jdk.jfr.Registered;
-
 import java.lang.management.ManagementFactory;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class LockContentionDemo {
 
-    public static final Integer NUM_WORKERS = 5;
+    // Total number of threads that will compete for the shared lock
+    public static final Integer NUM_WORKERS = 20;
+
+    // Simulated work duration in milliseconds — each worker holds the lock for this long
     public static final Integer WORK_DURATION = 1000;
+
+    // Shared lock object used for synchronization between threads
     private static final Object lock = new Object();
 
     public static void main(String[] args) {
+        // Thread pool with only 4 worker threads — intentionally fewer than NUM_WORKERS
+        // This creates contention both on the CPU threads and on the shared lock
         ExecutorService pool = Executors.newFixedThreadPool(4);
         System.out.println(">>>>> JVM args:");
         for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
             System.out.println("    " + arg);
         }
 
+        // Add JVM shutdown hook for graceful shutdown...
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println(">>>>> Shutdown hook triggered. Shutting down executor...");
+            pool.shutdownNow();  // Interrupts tasks, ends non-daemon threads
+
+            // Stop any programmatic JFR recordings...
+        }));
+
         for (int i = 0; i < NUM_WORKERS; i++) {
             pool.submit(() -> {
+                // Each worker loops forever, repeatedly trying to acquire the lock
                 while (true) {
                     workWithLock();
                 }
@@ -63,9 +81,9 @@ public class LockContentionDemo {
     }
 
     /*
-     * THis is the work that each worker is asked to do.
-     * In real life, instead of sleeping, the workser would
-     * likely be processing data in memory.
+     * This is the work each thread performs.
+     * Instead of real computation, we simulate work by sleeping.
+     * In production, this might represent I/O, shared memory updates, etc.
      */
     private static void workWithLock() {
         synchronized (lock) {
